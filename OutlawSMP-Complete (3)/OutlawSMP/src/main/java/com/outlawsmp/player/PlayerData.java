@@ -9,22 +9,21 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Full in-memory representation of a player's OutlawSMP state: their
- * Wishes, coins, bounty, and hunter event statistics.
+ * Full in-memory representation of a player's OutlawSMP state.
  */
 public class PlayerData {
 
     private final UUID uuid;
     private String name;
     private int coins;
+
     private final Bounty bounty;
     private final List<Wish> wishes = new ArrayList<>();
 
-    /** Hunter Event statistics. */
-    private int hunterSurvivals = 0;
-
-    /** Ordered set of Wish IDs whose blessings are currently active. */
     private final Set<UUID> activeWishes = new LinkedHashSet<>();
+
+    // Hunter leaderboard stat
+    private int hunterSurvivals = 0;
 
     private boolean dirty = false;
 
@@ -68,20 +67,6 @@ public class PlayerData {
         return wishes.size();
     }
 
-    public int getHunterSurvivals() {
-        return hunterSurvivals;
-    }
-
-    public void addHunterSurvival() {
-        hunterSurvivals++;
-        markDirty();
-    }
-
-    public void setHunterSurvivals(int amount) {
-        hunterSurvivals = Math.max(0, amount);
-        markDirty();
-    }
-
     public void addWish(Wish wish) {
         if (hasBlessing(wish.getBlessing())) {
             return;
@@ -92,7 +77,8 @@ public class PlayerData {
     }
 
     public boolean hasBlessing(Blessing blessing) {
-        return wishes.stream().anyMatch(w -> w.getBlessing() == blessing);
+        return wishes.stream()
+                .anyMatch(w -> w.getBlessing() == blessing);
     }
 
     public void removeWish(Wish wish) {
@@ -108,9 +94,9 @@ public class PlayerData {
     public List<Wish> getActiveWishes() {
         List<Wish> result = new ArrayList<>();
 
-        for (Wish w : wishes) {
-            if (activeWishes.contains(w.getId())) {
-                result.add(w);
+        for (Wish wish : wishes) {
+            if (activeWishes.contains(wish.getId())) {
+                result.add(wish);
             }
         }
 
@@ -151,6 +137,26 @@ public class PlayerData {
                 wishes.stream().noneMatch(w -> w.getId().equals(id))
         );
     }
+
+    // ==========================
+    // Hunter leaderboard methods
+    // ==========================
+
+    public int getHunterSurvivals() {
+        return hunterSurvivals;
+    }
+
+    public void addHunterSurvival() {
+        hunterSurvivals++;
+        markDirty();
+    }
+
+    public void setHunterSurvivals(int amount) {
+        hunterSurvivals = Math.max(0, amount);
+        markDirty();
+    }
+
+    // ==========================
 
     public boolean isDirty() {
         return dirty;
