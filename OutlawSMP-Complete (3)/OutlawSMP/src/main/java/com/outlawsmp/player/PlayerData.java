@@ -10,8 +10,7 @@ import java.util.UUID;
 
 /**
  * Full in-memory representation of a player's OutlawSMP state: their
- * Wishes, coins, and bounty. Loaded on join, saved on quit (and periodically
- * by the caller if desired).
+ * Wishes, coins, bounty, and hunter event statistics.
  */
 public class PlayerData {
 
@@ -21,7 +20,10 @@ public class PlayerData {
     private final Bounty bounty;
     private final List<Wish> wishes = new ArrayList<>();
 
-    /** Ordered set of Wish IDs whose blessings are currently active (max configured slots). */
+    /** Hunter Event statistics. */
+    private int hunterSurvivals = 0;
+
+    /** Ordered set of Wish IDs whose blessings are currently active. */
     private final Set<UUID> activeWishes = new LinkedHashSet<>();
 
     private boolean dirty = false;
@@ -66,16 +68,29 @@ public class PlayerData {
         return wishes.size();
     }
 
+    public int getHunterSurvivals() {
+        return hunterSurvivals;
+    }
+
+    public void addHunterSurvival() {
+        hunterSurvivals++;
+        markDirty();
+    }
+
+    public void setHunterSurvivals(int amount) {
+        hunterSurvivals = Math.max(0, amount);
+        markDirty();
+    }
+
     public void addWish(Wish wish) {
-        // Prevent duplicate blessings - a player can only own one Wish per blessing type
         if (hasBlessing(wish.getBlessing())) {
-            return; // Silently ignore duplicate (or could log)
+            return;
         }
+
         wishes.add(wish);
         markDirty();
     }
 
-    /** Checks if the player already owns a Wish with this blessing. */
     public boolean hasBlessing(Blessing blessing) {
         return wishes.stream().anyMatch(w -> w.getBlessing() == blessing);
     }
@@ -92,11 +107,13 @@ public class PlayerData {
 
     public List<Wish> getActiveWishes() {
         List<Wish> result = new ArrayList<>();
+
         for (Wish w : wishes) {
             if (activeWishes.contains(w.getId())) {
                 result.add(w);
             }
         }
+
         return result;
     }
 
@@ -104,19 +121,22 @@ public class PlayerData {
         return activeWishes.contains(wish.getId());
     }
 
-    /** Activates a wish's blessing, respecting the max-active-slots cap. */
     public boolean activate(Wish wish, int maxActive) {
         if (!wishes.contains(wish)) {
             return false;
         }
+
         if (activeWishes.contains(wish.getId())) {
             return true;
         }
+
         if (activeWishes.size() >= maxActive) {
             return false;
         }
+
         activeWishes.add(wish.getId());
         markDirty();
+
         return true;
     }
 
@@ -126,9 +146,10 @@ public class PlayerData {
         }
     }
 
-    /** Drops any active-wish references that no longer point at an owned wish. */
     public void pruneActiveWishes() {
-        activeWishes.removeIf(id -> wishes.stream().noneMatch(w -> w.getId().equals(id)));
+        activeWishes.removeIf(id ->
+                wishes.stream().noneMatch(w -> w.getId().equals(id))
+        );
     }
 
     public boolean isDirty() {
@@ -136,10 +157,10 @@ public class PlayerData {
     }
 
     public void markDirty() {
-        this.dirty = true;
+        dirty = true;
     }
 
     public void clearDirty() {
-        this.dirty = false;
+        dirty = false;
     }
 }
