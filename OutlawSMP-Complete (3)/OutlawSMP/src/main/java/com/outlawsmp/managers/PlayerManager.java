@@ -32,13 +32,21 @@ public class PlayerManager {
         this.wishManager = wishManager;
     }
 
-    /** Already-loaded data for an online player, or null if not loaded (shouldn't happen post-join). */
+    /** Already-loaded data for an online player, or null if not loaded. */
     public PlayerData getCached(UUID uuid) {
         return cache.get(uuid);
     }
 
     public PlayerData getCached(Player player) {
         return cache.get(player.getUniqueId());
+    }
+
+    /**
+     * Returns all currently cached players.
+     * Used by leaderboard systems and statistics.
+     */
+    public Collection<PlayerData> getAllCached() {
+        return cache.values();
     }
 
     public boolean isLoaded(UUID uuid) {
@@ -54,26 +62,36 @@ public class PlayerManager {
     }
 
     /**
-     * Loads a player's data asynchronously (creating a fresh record with
-     * starting Wishes/coins if this is their first join), then hands the
-     * result back on the main thread.
+     * Loads a player's data asynchronously.
      */
     public void loadPlayer(UUID uuid, String name, Consumer<PlayerData> onLoaded) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+
             PlayerData data = databaseManager.loadPlayer(uuid, name);
+
             if (data == null) {
                 int startingCoins = plugin.getConfig().getInt("starting-coins", 0);
-                data = new PlayerData(uuid, name, startingCoins, new Bounty());
+
+                data = new PlayerData(
+                        uuid,
+                        name,
+                        startingCoins,
+                        new Bounty()
+                );
+
                 wishManager.grantStartingWishes(data);
                 databaseManager.savePlayer(data);
+
             } else {
                 data.setName(name);
                 data.pruneActiveWishes();
             }
 
             PlayerData finalData = data;
+
             Bukkit.getScheduler().runTask(plugin, () -> {
                 cache(finalData);
+
                 if (onLoaded != null) {
                     onLoaded.accept(finalData);
                 }
@@ -81,23 +99,31 @@ public class PlayerManager {
         });
     }
 
-    /** Saves a player's data asynchronously. Safe to call even if nothing changed. */
+    /** Saves a player's data asynchronously. */
     public void savePlayer(PlayerData data) {
         if (data == null) {
             return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> databaseManager.savePlayer(data));
+
+        Bukkit.getScheduler().runTaskAsynchronously(
+                plugin,
+                () -> databaseManager.savePlayer(data)
+        );
     }
 
-    /** Saves and removes a player's data from the cache, typically on quit. */
+    /** Saves and removes player data from cache. */
     public void unloadPlayer(UUID uuid) {
         PlayerData data = cache.remove(uuid);
+
         if (data != null) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> databaseManager.savePlayer(data));
+            Bukkit.getScheduler().runTaskAsynchronously(
+                    plugin,
+                    () -> databaseManager.savePlayer(data)
+            );
         }
     }
 
-    /** Saves every currently cached player synchronously. Intended for use on plugin disable. */
+    /** Saves all cached players during shutdown. */
     public void saveAllSync() {
         for (PlayerData data : cache.values()) {
             databaseManager.savePlayer(data);
