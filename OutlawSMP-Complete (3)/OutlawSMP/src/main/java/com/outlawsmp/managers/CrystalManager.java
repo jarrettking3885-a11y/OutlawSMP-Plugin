@@ -1,6 +1,8 @@
 package com.outlawsmp.managers;
 
 import com.outlawsmp.OutlawSMP;
+import com.outlawsmp.player.PlayerData;
+import com.outlawsmp.player.Blessing;
 import com.outlawsmp.player.Wish;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
