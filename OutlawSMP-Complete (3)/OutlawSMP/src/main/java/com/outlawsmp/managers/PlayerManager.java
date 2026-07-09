@@ -14,16 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
- * Owns the in-memory cache of {@link PlayerData} and coordinates loading
- * from / saving to the {@link DatabaseManager}. All database I/O happens off
- * the main thread; callers get results back on the main thread via the
- * supplied callback.
+ * Handles loading, caching, and saving player data.
  */
 public class PlayerManager {
 
     private final JavaPlugin plugin;
     private final DatabaseManager databaseManager;
     private final WishManager wishManager;
+
     private final Map<UUID, PlayerData> cache = new ConcurrentHashMap<>();
 
     public PlayerManager(JavaPlugin plugin, DatabaseManager databaseManager, WishManager wishManager) {
@@ -32,21 +30,12 @@ public class PlayerManager {
         this.wishManager = wishManager;
     }
 
-    /** Already-loaded data for an online player, or null if not loaded. */
     public PlayerData getCached(UUID uuid) {
         return cache.get(uuid);
     }
 
     public PlayerData getCached(Player player) {
         return cache.get(player.getUniqueId());
-    }
-
-    /**
-     * Returns all currently cached players.
-     * Used by leaderboard systems and statistics.
-     */
-    public Collection<PlayerData> getAllCached() {
-        return cache.values();
     }
 
     public boolean isLoaded(UUID uuid) {
@@ -62,8 +51,12 @@ public class PlayerManager {
     }
 
     /**
-     * Loads a player's data asynchronously.
+     * Added for LeaderboardManager.
      */
+    public Collection<PlayerData> getAllCached() {
+        return cache.values();
+    }
+
     public void loadPlayer(UUID uuid, String name, Consumer<PlayerData> onLoaded) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 
@@ -99,7 +92,6 @@ public class PlayerManager {
         });
     }
 
-    /** Saves a player's data asynchronously. */
     public void savePlayer(PlayerData data) {
         if (data == null) {
             return;
@@ -111,7 +103,6 @@ public class PlayerManager {
         );
     }
 
-    /** Saves and removes player data from cache. */
     public void unloadPlayer(UUID uuid) {
         PlayerData data = cache.remove(uuid);
 
@@ -123,7 +114,6 @@ public class PlayerManager {
         }
     }
 
-    /** Saves all cached players during shutdown. */
     public void saveAllSync() {
         for (PlayerData data : cache.values()) {
             databaseManager.savePlayer(data);
