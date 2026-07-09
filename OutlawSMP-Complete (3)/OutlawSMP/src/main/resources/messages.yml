@@ -1,0 +1,6 @@
+prefix: '&c&lOutlaw&6&lSMP &8» &r'
+no-permission: '&cYou do not have permission to do that.'
+player-only: '&cOnly players can do that.'
+player-not-found: '&cThat player could not be found.'
+unknown-player-data: '&cNo data found for that player yet.'
+not-near-spawn: '&cYou must be near spawn to change your active blessings.'

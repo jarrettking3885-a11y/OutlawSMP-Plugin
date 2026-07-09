@@ -1,0 +1,54 @@
+name: OutlawSMP
+version: '1.1.0'
+main: com.outlawsmp.OutlawSMP
+api-version: '1.21'
+author: Jay
+description: Wishes, Blessings, Bounties, Hunter Events and PvP-driven emergent gameplay for content servers.
+
+commands:
+  wish:
+    description: View your Wishes, redeem tokens at the Shrine, and manage which blessings are active.
+    usage: /wish [list|gui|redeem|activate <#>|deactivate <#>]
+    permission: outlawsmp.wish
+  balance:
+    description: View your (or another player's) coin balance.
+    usage: /balance [player]
+    aliases: [bal, coins]
+    permission: outlawsmp.balance
+  bounty:
+    description: View your bounty, another player's bounty, or the bounty leaderboard.
+    usage: /bounty [player|top]
+    permission: outlawsmp.bounty
+  stats:
+    description: View your (or another player's) OutlawSMP stats.
+    usage: /stats [player]
+    permission: outlawsmp.stats
+  hunter:
+    description: View the current Hunter Event status.
+    usage: /hunter
+    permission: outlawsmp.hunter
+  outlawadmin:
+    description: OutlawSMP admin commands.
+    usage: /outlawadmin <reload|event start|event stop>
+    permission: outlawsmp.admin
+  pay:
+    description: Pay coins to another player.
+    usage: /pay <player> <amount>
+    permission: outlawsmp.pay
+
+permissions:
+  outlawsmp.wish:
+    default: true
+  outlawsmp.balance:
+    default: true
+  outlawsmp.bounty:
+    default: true
+  outlawsmp.stats:
+    default: true
+  outlawsmp.hunter:
+    default: true
+  outlawsmp.admin:
+    description: Access to OutlawSMP admin commands.
+    default: op
+  outlawsmp.pay:
+    default: true

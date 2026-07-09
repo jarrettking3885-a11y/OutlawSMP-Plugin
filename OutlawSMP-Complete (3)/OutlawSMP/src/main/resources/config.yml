@@ -1,0 +1,76 @@
+# OutlawSMP configuration
+
+# --- Wishes ---
+starting-wishes: 3
+max-active-blessings: 5
+
+# Radius (in blocks) around each world's spawn point where players are
+# allowed to change which blessings are active. Set to -1 to disable the
+# location restriction entirely.
+blessing-change-radius: 15
+
+# --- Coins ---
+starting-coins: 0
+
+# --- Bounty ---
+# How much a player's bounty increases per PvP kill they land.
+kill-bounty-increase: 5
+# Minimum coins paid out for a kill even if the victim's bounty is 0.
+minimum-kill-payout: 0
+
+# --- Hunter Event ---
+# Every `interval-minutes`, the online player with the most Wishes becomes
+# "The Hunted". Everyone online gets a compass tracking them. If The Hunted
+# survives `duration-minutes`, they get a reward. If someone kills The
+# Hunted, the killer gets bonus coins on top of the normal bounty payout and
+# Wish steal that already happen on any PvP kill.
+hunter-event:
+  enabled: true
+  interval-minutes: 30
+  duration-minutes: 10
+  # Don't start an event unless at least this many players are online.
+  minimum-online-players: 2
+  # Coins awarded to The Hunted if they survive the full duration.
+  survive-reward-coins: 150
+  # Bonus coins awarded to whoever kills The Hunted (in addition to the
+  # normal bounty payout from BountyManager).
+  kill-bonus-coins: 250
+  # How often (in ticks, 20 = 1 second) compasses are refreshed to point at
+  # The Hunted's current location.
+  compass-update-interval-ticks: 40
+  # Threat Score decides who becomes The Hunted: the online player with the
+  # highest (wishes * wish-weight) + (bounty * bounty-weight) +
+  # (kill-streak * kill-streak-weight). This rewards aggressive play, not
+  # just sitting on a pile of Wishes.
+  threat-weights:
+    wishes: 5
+    bounty: 1
+    kill-streak: 3
+
+# --- Wish Shrine ---
+# Wishes stolen in PvP don't transfer instantly. The killer gets an
+# unredeemed Wish Token item instead, which must be carried back here and
+# redeemed (right-click near the shrine, or /wish redeem) before it becomes
+# an owned Wish. If the carrier dies first, whoever kills them gets the
+# token instead.
+wish-shrine:
+  enabled: true
+  world: world
+  x: 0
+  y: 64
+  z: 0
+  radius: 4
+
+# --- Database ---
+database:
+  file: outlawsmp.db
+
+# --- Wish Crystals ---
+wish-crystals:
+  enabled: true
+  spawn-interval-minutes: 45
+  lifetime-minutes: 15
+
+# --- Messages ---
+prefix: '&c&lOutlaw&6&lSMP &8» &r'
+crystal-spawn: '&c&lA Wish Crystal has spawned at &eX:%d Y:%d Z:%d&c&l!'
