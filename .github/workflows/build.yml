@@ -22,10 +22,11 @@ jobs:
           cache: maven
 
       - name: Build with Maven
+        working-directory: OutlawSMP
         run: mvn clean package
 
       - name: Upload Plugin Jar
         uses: actions/upload-artifact@v4
         with:
           name: OutlawSMP-Jar
-          path: target/*.jar
+          path: OutlawSMP/target/*.jar
