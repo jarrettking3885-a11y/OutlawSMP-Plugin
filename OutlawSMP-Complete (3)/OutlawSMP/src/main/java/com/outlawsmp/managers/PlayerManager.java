@@ -1,4 +1,55 @@
-/** Already-loaded data for an online player, or null if not loaded (shouldn't happen post-join). */
+Package com.outlawsmp.managers;
+ 
+import com.outlawsmp.database.DatabaseManager;
+import com.outlawsmp.models.Bounty;
+import com.outlawsmp.player.PlayerData;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+ 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.function.Consumer;
+ 
+/**
+ * Owns the in-memory cache of {@link PlayerData} and coordinates loading
+ * from / saving to the {@link DatabaseManager}. All database I/O happens off
+ * the main thread; callers get results back on the main thread via the
+ * supplied callback.
+ *
+ * <p>Per-player database operations (load/save/unload) are chained through
+ * {@link #pendingOps} so they always execute in the order they were
+ * requested. Without this, a quick relog could race: the async save
+ * triggered by a quit could still be in flight when the very next join's
+ * async load starts, so the load could read stale pre-quit data, and the
+ * quit's save could then land afterward and silently overwrite whatever the
+ * new session had already done. Chaining per UUID means a save started by
+ * a quit is always fully applied before the following join's load reads the
+ * database, while different players' I/O still runs concurrently.</p>
+ */
+public class PlayerManager {
+ 
+    private final JavaPlugin plugin;
+    private final DatabaseManager databaseManager;
+    private final WishManager wishManager;
+    private final Map<UUID, PlayerData> cache = new ConcurrentHashMap<>();
+ 
+    /** Tail of the pending-operation chain for each UUID currently mid-flight. */
+    private final Map<UUID, CompletableFuture<Void>> pendingOps = new ConcurrentHashMap<>();
+ 
+    /** Runs a task on Bukkit's async scheduler; used as the executor for chained ops. */
+    private final Executor asyncExecutor = task -> Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+ 
+    public PlayerManager(JavaPlugin plugin, DatabaseManager databaseManager, WishManager wishManager) {
+        this.plugin = plugin;
+        this.databaseManager = databaseManager;
+        this.wishManager = wishManager;
+    }
+ 
+    /** Already-loaded data for an online player, or null if not loaded (shouldn't happen post-join). */
     public PlayerData getCached(UUID uuid) {
         return cache.get(uuid);
     }
