@@ -1,5 +1,4 @@
 package com.outlawsmp.managers;
-
  
 import com.outlawsmp.database.DatabaseManager;
 import com.outlawsmp.models.Bounty;
@@ -8,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
  
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -42,12 +42,13 @@ public class PlayerManager {
     private final Map<UUID, CompletableFuture<Void>> pendingOps = new ConcurrentHashMap<>();
  
     /** Runs a task on Bukkit's async scheduler; used as the executor for chained ops. */
-    private final Executor asyncExecutor = task -> Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+    private final Executor asyncExecutor;
  
     public PlayerManager(JavaPlugin plugin, DatabaseManager databaseManager, WishManager wishManager) {
         this.plugin = plugin;
         this.databaseManager = databaseManager;
         this.wishManager = wishManager;
+        this.asyncExecutor = task -> Bukkit.getScheduler().runTaskAsynchronously(this.plugin, task);
     }
  
     /** Already-loaded data for an online player, or null if not loaded (shouldn't happen post-join). */
@@ -69,6 +70,11 @@ public class PlayerManager {
  
     public void uncache(UUID uuid) {
         cache.remove(uuid);
+    }
+ 
+    /** All currently cached (online) players' data, e.g. for leaderboards. */
+    public Collection<PlayerData> getAllCached() {
+        return cache.values();
     }
  
     /**
