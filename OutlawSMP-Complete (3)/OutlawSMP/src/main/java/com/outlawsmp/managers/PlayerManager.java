@@ -1,4 +1,5 @@
-Package com.outlawsmp.managers;
+package com.outlawsmp.managers;
+
  
 import com.outlawsmp.database.DatabaseManager;
 import com.outlawsmp.models.Bounty;
